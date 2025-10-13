@@ -106,3 +106,70 @@ setInterval(fetchSensorData, 2000);
 
 // Initial fetch when page loads
 document.addEventListener('DOMContentLoaded', fetchSensorData);
+
+// -------------------------
+// Raindrop history chart
+// -------------------------
+let raindropChart = null;
+
+async function fetchRaindrops(n = 10) {
+  try {
+    const res = await fetch(`/api/raindrops?n=${n}`);
+    if (!res.ok) throw new Error('Network response not ok');
+    const payload = await res.json();
+    if (!payload.success) throw new Error(payload.error || 'API error');
+    return payload.rows || [];
+  } catch (err) {
+    console.error('Failed to fetch raindrops:', err);
+    return [];
+  }
+}
+
+function buildOrUpdateChart(labels, values) {
+  const ctx = document.getElementById('raindropChart');
+  if (!ctx) return;
+
+  if (raindropChart) {
+    raindropChart.data.labels = labels;
+    raindropChart.data.datasets[0].data = values;
+    raindropChart.update();
+    return;
+  }
+
+  raindropChart = new Chart(ctx.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Raindrop (1=rain,0=no rain)',
+        data: values,
+        borderColor: 'rgba(54,162,235,1)',
+        backgroundColor: 'rgba(54,162,235,0.2)',
+        fill: true,
+        tension: 0.25,
+        pointRadius: 3
+      }]
+    },
+    options: {
+      scales: {
+        x: { display: true },
+        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+      }
+    }
+  });
+}
+
+async function refreshRaindropChart() {
+  const rows = await fetchRaindrops(10);
+  const labels = rows.map(r => r.ts ? new Date(r.ts).toLocaleTimeString() : String(r.id));
+  const values = rows.map(r => Number(r.value));
+  buildOrUpdateChart(labels, values);
+}
+
+// Start chart refresh on DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  // initial chart draw
+  refreshRaindropChart();
+  // refresh every 5 seconds
+  setInterval(refreshRaindropChart, 5000);
+});

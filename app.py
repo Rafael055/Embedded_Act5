@@ -5,6 +5,7 @@ from soundsensor import read_sound
 from buzzer import check_alert_conditions, cleanup as buzzer_cleanup
 import RPi.GPIO as GPIO
 import atexit
+from database import get_last_raindrops
 
 app = Flask(__name__)
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -49,6 +50,22 @@ def api_sensors():
             "success": False,
             "error": str(e)
         }), 500
+
+
+@app.route('/api/raindrops')
+def api_raindrops():
+    """Return last N raindrop readings from the DB (oldest->newest)."""
+    from flask import request
+    try:
+        n = int(request.args.get('n', 10))
+    except Exception:
+        n = 10
+    n = max(1, min(100, n))
+    try:
+        rows = get_last_raindrops(limit=n)
+        return jsonify({"success": True, "rows": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/dht')
 def api_dht():

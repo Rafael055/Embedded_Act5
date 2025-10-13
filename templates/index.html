@@ -19,7 +19,7 @@
   </div>
 
   <div class="container">
-    <h1>Activity 4 Embedded System Dashboard</h1>
+    <h1>Activity 5 Embedded System Dashboard</h1>
 
     <div class="sensor-grid">
       <!-- DHT11 Sensor Card -->
@@ -46,6 +46,11 @@
             <span class="value" id="rain-status">Loading...</span>
           </div>
         </div>
+        <!-- Raindrop history chart -->
+        <div class="chart-area">
+          <h3>Raindrop history (last 10)</h3>
+          <canvas id="raindropChart" width="600" height="180"></canvas>
+        </div>
       </div>
 
       <!-- Sound Sensor Card -->
@@ -60,6 +65,8 @@
       </div>
     </div>
 
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 
