@@ -113,21 +113,23 @@ document.addEventListener('DOMContentLoaded', fetchSensorData);
 let raindropChart = null;
 
 async function fetchRaindrops(n = 10) {
-  try {
-    const res = await fetch(`/api/raindrops?n=${n}`);
-    if (!res.ok) throw new Error('Network response not ok');
-    const payload = await res.json();
-    if (!payload.success) throw new Error(payload.error || 'API error');
-    return payload.rows || [];
-  } catch (err) {
-    console.error('Failed to fetch raindrops:', err);
-    return [];
-  }
+  const res = await fetch(`/api/raindrops?n=${n}`);
+  if (!res.ok) throw new Error("Failed to fetch raindrops");
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error || "API returned failure");
+  return json.rows || [];
 }
 
-function buildOrUpdateChart(labels, values) {
-  const ctx = document.getElementById('raindropChart');
-  if (!ctx) return;
+function formatTimeLabel(isoTs) {
+  // isoTs expected like "YYYY-MM-DDTHH:MM:SSZ"
+  const d = new Date(isoTs);
+  if (isNaN(d)) return isoTs;
+  // show hours:minutes:seconds for clarity
+  return d.toLocaleTimeString();
+}
+
+function buildChart(labels, values) {
+  const ctx = document.getElementById('raindropChart').getContext('2d');
 
   if (raindropChart) {
     raindropChart.data.labels = labels;
@@ -136,39 +138,65 @@ function buildOrUpdateChart(labels, values) {
     return;
   }
 
-  raindropChart = new Chart(ctx.getContext('2d'), {
+  raindropChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: labels,
       datasets: [{
-        label: 'Raindrop (1=rain,0=no rain)',
+        label: 'Raindrop value',
         data: values,
-        borderColor: 'rgba(54,162,235,1)',
-        backgroundColor: 'rgba(54,162,235,0.2)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        backgroundColor: 'rgba(54, 162, 235, 0.12)',
         fill: true,
         tension: 0.25,
-        pointRadius: 3
+        pointRadius: 4,
+        pointHoverRadius: 6
       }]
     },
     options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
       scales: {
-        x: { display: true },
-        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+        x: {
+          display: true,
+          title: { display: true, text: 'Time' },
+          ticks: {
+            maxRotation: 45,
+            autoSkip: true,
+            maxTicksLimit: 10
+          }
+        },
+        y: {
+          display: true,
+          beginAtZero: true,
+          title: { display: true, text: 'Intensity (1 = rain, 0 = no rain)' },
+          ticks: {
+            // for binary rain values this keeps the scale readable
+            stepSize: 1
+          }
+        }
       }
     }
   });
 }
 
 async function refreshRaindropChart() {
-  const rows = await fetchRaindrops(10);
-  const labels = rows.map(r => r.ts ? new Date(r.ts).toLocaleTimeString() : String(r.id));
-  const values = rows.map(r => Number(r.value));
-  buildOrUpdateChart(labels, values);
+  try {
+    const rows = await fetchRaindrops(10);
+    const labels = rows.map(r => formatTimeLabel(r.ts));
+    const values = rows.map(r => Number(r.value));
+    buildChart(labels, values);
+  } catch (err) {
+    console.error("Could not update raindrop chart:", err);
+  }
 }
 
-// Start chart refresh on DOM ready
+
+// initial load
 document.addEventListener('DOMContentLoaded', () => {
-  // initial chart draw
   refreshRaindropChart();
   // refresh every 5 seconds
   setInterval(refreshRaindropChart, 5000);

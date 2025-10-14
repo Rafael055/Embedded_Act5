@@ -45,7 +45,22 @@ def get_last_raindrops(limit=10):
     conn.close()
     # rows are newest first; reverse to oldest->newest
     rows = list(reversed(rows))
-    return [{"id": r["id"], "value": r["value"], "ts": r["ts"]} for r in rows]
+
+    out = []
+    for r in rows:
+        ts = r["ts"]
+        # Normalize timestamp to ISO8601 (UTC). DB may return datetime or string 'YYYY-MM-DD HH:MM:SS'
+        if isinstance(ts, datetime):
+            ts_iso = ts.isoformat() + "Z"
+        else:
+            s = str(ts) if ts is not None else ""
+            # convert "YYYY-MM-DD HH:MM:SS" -> "YYYY-MM-DDTHH:MM:SSZ"
+            if s and "T" not in s:
+                ts_iso = s.replace(" ", "T") + "Z"
+            else:
+                ts_iso = s
+        out.append({"id": r["id"], "value": r["value"], "ts": ts_iso})
+    return out
 
 # Initialize DB on import
 init_db()

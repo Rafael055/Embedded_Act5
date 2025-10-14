@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Activity 4 Dashboard</title>
+  <title>Activity 5 Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
@@ -48,8 +48,10 @@
         </div>
         <!-- Raindrop history chart -->
         <div class="chart-area">
-          <h3>Raindrop history (last 10)</h3>
-          <canvas id="raindropChart" width="600" height="180"></canvas>
+          <h3>Raindrop History Graph</h3>
+          <div class="chart-wrapper">
+            <canvas id="raindropChart" class="responsive-chart"></canvas>
+          </div>
         </div>
       </div>
 
