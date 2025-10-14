@@ -21,9 +21,9 @@
   <div class="container">
     <h1>Activity 5 Embedded System Dashboard</h1>
 
-    <div class="sensor-grid">
-      <!-- DHT11 Sensor Card -->
-      <div class="sensor-card">
+    <!-- Centered DHT under title -->
+    <div class="dht-centered">
+      <div class="sensor-card dht-card">
         <h2>🌡️ Temperature & Humidity</h2>
         <div class="sensor-data">
           <div class="data-item">
@@ -36,7 +36,10 @@
           </div>
         </div>
       </div>
+    </div>
 
+    <!-- Two-column sensor area for Rain and Sound history -->
+    <div class="sensor-grid two-column">
       <!-- Rain Sensor Card -->
       <div class="sensor-card">
         <h2>🌧️ Rain Detector</h2>
@@ -64,11 +67,12 @@
             <span class="value" id="sound-status">Loading...</span>
           </div>
         </div>
-        <!-- Sound intensity analog graph -->
+
+        <!-- Sound history chart -->
         <div class="chart-area">
-          <h3>Sound Intensity Graph</h3>
+          <h3>Sound History Graph</h3>
           <div class="chart-wrapper">
-            <canvas id="soundChart" class="responsive-chart"></canvas>
+            <canvas id="soundHistoryChart" class="responsive-chart"></canvas>
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ from buzzer import check_alert_conditions, cleanup as buzzer_cleanup
 import RPi.GPIO as GPIO
 import atexit
 from database import get_last_raindrops
+from database import insert_sound, get_last_sounds
 
 app = Flask(__name__)
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -31,6 +32,13 @@ def api_sensors():
         dht_data = read_dht()
         rain_data = read_raindrop()
         sound_data = read_sound()
+        # store sound intensity percent to DB for history if available
+        try:
+            if sound_data and sound_data.get('percent') is not None:
+                insert_sound(sound_data.get('percent'))
+        except Exception as e:
+            # log but don't break API
+            print(f"Warning: failed to insert sound reading: {e}")
         
         # Check alert conditions (both rain and sound detected)
         alert_data = check_alert_conditions(
@@ -63,6 +71,22 @@ def api_raindrops():
     n = max(1, min(100, n))
     try:
         rows = get_last_raindrops(limit=n)
+        return jsonify({"success": True, "rows": rows})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/sounds')
+def api_sounds():
+    """Return last N sound readings from the DB (oldest->newest)."""
+    from flask import request
+    try:
+        n = int(request.args.get('n', 10))
+    except Exception:
+        n = 10
+    n = max(1, min(500, n))
+    try:
+        rows = get_last_sounds(limit=n)
         return jsonify({"success": True, "rows": rows})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500

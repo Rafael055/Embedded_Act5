@@ -90,40 +90,6 @@ let soundChart = null;
 const SOUND_BUFFER_SIZE = 60; // number of points to keep (e.g., last 2 minutes at 2s interval)
 const soundBuffer = Array(SOUND_BUFFER_SIZE).fill(null);
 
-function initSoundChart() {
-  const ctx = document.getElementById('soundChart').getContext('2d');
-  const labels = Array.from({ length: SOUND_BUFFER_SIZE }, (_, i) => '');
-
-  soundChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: 'Sound intensity (%)',
-        data: soundBuffer,
-        borderColor: 'rgba(231, 76, 60, 1)',
-        backgroundColor: 'rgba(231, 76, 60, 0.12)',
-        fill: true,
-        tension: 0.25,
-        pointRadius: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { display: false },
-        y: {
-          display: true,
-          beginAtZero: true,
-          suggestedMax: 100,
-          title: { display: true, text: 'Percent (%)' }
-        }
-      }
-    }
-  });
-}
 
 function pushSoundValue(percent) {
   // shift buffer left and push new value
@@ -186,7 +152,7 @@ function formatTimeLabel(isoTs) {
   return d.toLocaleTimeString();
 }
 
-function buildChart(labels, values) {
+function buildRaindropChart(labels, values) {
   const ctx = document.getElementById('raindropChart').getContext('2d');
 
   if (raindropChart) {
@@ -246,18 +212,94 @@ async function refreshRaindropChart() {
     const rows = await fetchRaindrops(10);
     const labels = rows.map(r => formatTimeLabel(r.ts));
     const values = rows.map(r => Number(r.value));
-    buildChart(labels, values);
+    buildRaindropChart(labels, values);
   } catch (err) {
     console.error("Could not update raindrop chart:", err);
   }
 }
 
+// -------------------------
+// Sound history chart
+// -------------------------
+let soundHistoryChart = null;
+
+async function fetchSounds(n = 10) {
+  const res = await fetch(`/api/sounds?n=${n}`);
+  if (!res.ok) throw new Error("Failed to fetch sounds");
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error || "API returned failure");
+  return json.rows || [];
+}
+
+function buildSoundHistoryChart(labels, values) {
+  const ctx = document.getElementById('soundHistoryChart').getContext('2d');
+
+  if (soundHistoryChart) {
+    soundHistoryChart.data.labels = labels;
+    soundHistoryChart.data.datasets[0].data = values;
+    soundHistoryChart.update();
+    return;
+  }
+
+  soundHistoryChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Sound intensity (%)',
+        data: values,
+        borderColor: 'rgba(231, 76, 60, 1)',
+        backgroundColor: 'rgba(231, 76, 60, 0.12)',
+        fill: true,
+        tension: 0.25,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          display: true,
+          title: { display: true, text: 'Time' },
+          ticks: {
+            maxRotation: 45,
+            autoSkip: true,
+            maxTicksLimit: 10
+          }
+        },
+        y: {
+          display: true,
+          beginAtZero: true,
+          suggestedMax: 100,
+          title: { display: true, text: 'Sound intensity (%)' }
+        }
+      }
+    }
+  });
+}
+
+async function refreshSoundHistoryChart() {
+  try {
+    const rows = await fetchSounds(10);
+    const labels = rows.map(r => formatTimeLabel(r.ts));
+    const values = rows.map(r => Number(r.value));
+    buildSoundHistoryChart(labels, values);
+  } catch (err) {
+    console.error("Could not update sound history chart:", err);
+  }
+}
 
 // initial load
 document.addEventListener('DOMContentLoaded', () => {
   refreshRaindropChart();
+  refreshSoundHistoryChart();
   // initialize sound chart
-  initSoundChart();
   // refresh every 5 seconds
   setInterval(refreshRaindropChart, 5000);
+  setInterval(refreshSoundHistoryChart, 5000);
 });

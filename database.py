@@ -21,6 +21,14 @@ def init_db():
             ts DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """)
+    # Create table for sound intensity history
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS sound_readings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            value REAL NOT NULL,
+            ts DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
     conn.commit()
     conn.close()
 
@@ -31,6 +39,18 @@ def insert_raindrop(value, ts=None):
     conn = _get_conn()
     cur = conn.cursor()
     cur.execute("INSERT INTO raindrops (value, ts) VALUES (?, ?)", (float(value), ts))
+    conn.commit()
+    last_id = cur.lastrowid
+    conn.close()
+    return last_id
+
+def insert_sound(value, ts=None):
+    """Insert a sound intensity reading. ts can be a datetime or None."""
+    if ts is None:
+        ts = datetime.utcnow()
+    conn = _get_conn()
+    cur = conn.cursor()
+    cur.execute("INSERT INTO sound_readings (value, ts) VALUES (?, ?)", (float(value), ts))
     conn.commit()
     last_id = cur.lastrowid
     conn.close()
@@ -55,6 +75,29 @@ def get_last_raindrops(limit=10):
         else:
             s = str(ts) if ts is not None else ""
             # convert "YYYY-MM-DD HH:MM:SS" -> "YYYY-MM-DDTHH:MM:SSZ"
+            if s and "T" not in s:
+                ts_iso = s.replace(" ", "T") + "Z"
+            else:
+                ts_iso = s
+        out.append({"id": r["id"], "value": r["value"], "ts": ts_iso})
+    return out
+
+def get_last_sounds(limit=10):
+    """Return the last `limit` sound readings ordered oldest->newest as list of dicts."""
+    conn = _get_conn()
+    cur = conn.cursor()
+    cur.execute("SELECT id, value, ts FROM sound_readings ORDER BY ts DESC LIMIT ?", (int(limit),))
+    rows = cur.fetchall()
+    conn.close()
+    rows = list(reversed(rows))
+
+    out = []
+    for r in rows:
+        ts = r["ts"]
+        if isinstance(ts, datetime):
+            ts_iso = ts.isoformat() + "Z"
+        else:
+            s = str(ts) if ts is not None else ""
             if s and "T" not in s:
                 ts_iso = s.replace(" ", "T") + "Z"
             else:

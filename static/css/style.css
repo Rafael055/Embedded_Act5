@@ -31,6 +31,23 @@ h1 {
     margin-bottom: 20px;
 }
 
+/* Two-column grid specifically for rain and sound cards */
+.sensor-grid.two-column {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+/* Centered DHT section (single card centered below title) */
+.dht-centered {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.dht-centered .dht-card {
+    max-width: 500px;
+    width: 100%;
+}
+
 .sensor-card {
     background: white;
     border-radius: 15px;
@@ -204,6 +221,10 @@ h1 {
     }
     
     .sensor-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .sensor-grid.two-column {
         grid-template-columns: 1fr;
     }
     
