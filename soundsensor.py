@@ -125,9 +125,11 @@ def read_sound(samples=DEFAULT_SAMPLES):
             detected = True
             detected_by = "analog"
 
-        status = "Sound detected" if detected else "Quiet"
+        # Show only percentage value as status
         if percent is not None:
-            status += f" — {percent:.0f}% intensity"
+            status = f"{percent:.0f}%"
+        else:
+            status = "No data"
 
         return {
             "sound_detected": detected,
