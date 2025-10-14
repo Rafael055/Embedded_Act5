@@ -9,6 +9,12 @@ async function fetchSensorData() {
       updateRainDisplay(data.rain);
       updateSoundDisplay(data.sound);
       updateAlertDisplay(data.alert);
+      // update sound chart with analog percent if available
+      if (typeof data.sound.percent === 'number') {
+        pushSoundValue(data.sound.percent);
+      } else {
+        pushSoundValue(null);
+      }
     } else {
       console.error('Error fetching sensor data:', data.error);
     }
@@ -74,6 +80,58 @@ function updateSoundDisplay(sound) {
     }
   } else {
     statusElement.textContent = 'Loading...';
+  }
+}
+
+// -------------------------
+// Sound intensity chart
+// -------------------------
+let soundChart = null;
+const SOUND_BUFFER_SIZE = 60; // number of points to keep (e.g., last 2 minutes at 2s interval)
+const soundBuffer = Array(SOUND_BUFFER_SIZE).fill(null);
+
+function initSoundChart() {
+  const ctx = document.getElementById('soundChart').getContext('2d');
+  const labels = Array.from({ length: SOUND_BUFFER_SIZE }, (_, i) => '');
+
+  soundChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Sound intensity (%)',
+        data: soundBuffer,
+        borderColor: 'rgba(231, 76, 60, 1)',
+        backgroundColor: 'rgba(231, 76, 60, 0.12)',
+        fill: true,
+        tension: 0.25,
+        pointRadius: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { display: false },
+        y: {
+          display: true,
+          beginAtZero: true,
+          suggestedMax: 100,
+          title: { display: true, text: 'Percent (%)' }
+        }
+      }
+    }
+  });
+}
+
+function pushSoundValue(percent) {
+  // shift buffer left and push new value
+  soundBuffer.shift();
+  soundBuffer.push(typeof percent === 'number' ? percent : null);
+  if (soundChart) {
+    soundChart.data.datasets[0].data = soundBuffer.slice();
+    soundChart.update('none');
   }
 }
 
@@ -198,6 +256,8 @@ async function refreshRaindropChart() {
 // initial load
 document.addEventListener('DOMContentLoaded', () => {
   refreshRaindropChart();
+  // initialize sound chart
+  initSoundChart();
   // refresh every 5 seconds
   setInterval(refreshRaindropChart, 5000);
 });
