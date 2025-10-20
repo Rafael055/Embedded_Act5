@@ -132,8 +132,8 @@ function buildRaindropChart(labels, values) {
       datasets: [{
         label: 'Raindrop value',
         data: values,
-        borderColor: 'rgba(54, 162, 235, 1)',
-        backgroundColor: 'rgba(54, 162, 235, 0.12)',
+        borderColor: 'rgba(52, 194, 71, 1)',
+        backgroundColor: 'rgba(54, 235, 190, 0.12)',
         fill: true,
         tension: 0.25,
         pointRadius: 4,
@@ -210,8 +210,8 @@ function buildSoundHistoryChart(labels, values) {
       datasets: [{
         label: 'Sound intensity (%)',
         data: values,
-        borderColor: 'rgba(231, 76, 60, 1)',
-        backgroundColor: 'rgba(231, 76, 60, 0.12)',
+        borderColor: 'rgba(16, 73, 66, 1)',
+        backgroundColor: 'rgba(60, 231, 203, 0.12)',
         fill: true,
         tension: 0.25,
         pointRadius: 4,

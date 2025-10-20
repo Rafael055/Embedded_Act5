@@ -5,8 +5,10 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-image: url('img1/greenbg.jpg');
+    background-size: cover;        
+    background-position: center;    
+    background-repeat: no-repeat;   
     min-height: 100vh;
     padding: 20px;
 }
@@ -17,11 +19,20 @@ body {
 }
 
 h1 {
+    font-family: 'BBH Sans Bogle', sans-serif;
     text-align: center;
-    color: white;
+    color: rgb(43, 99, 66);       /* text color */
     margin-bottom: 30px;
-    font-size: 2.5em;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    font-size: 3rem;
+
+    -webkit-text-stroke: 0.1px rgb(14, 43, 18); 
+    -webkit-text-fill-color: rgb(114, 194, 146); 
+}
+
+h3 {
+    font-family: 'Gorditas', sans-serif;
+    text-align: center;
+    color: rgb(51, 117, 79);
 }
 
 .sensor-grid {
@@ -31,12 +42,10 @@ h1 {
     margin-bottom: 20px;
 }
 
-/* Two-column grid specifically for rain and sound cards */
 .sensor-grid.two-column {
     grid-template-columns: repeat(2, 1fr);
 }
 
-/* Centered DHT section (single card centered below title) */
 .dht-centered {
     display: flex;
     justify-content: center;
@@ -49,7 +58,7 @@ h1 {
 }
 
 .sensor-card {
-    background: white;
+    background: rgb(250, 255, 248);
     border-radius: 15px;
     padding: 25px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
@@ -62,10 +71,11 @@ h1 {
 }
 
 .sensor-card h2 {
-    color: #333;
+    font-family: 'Concert One', sans-serif;
+    color: #12614d;
     margin-bottom: 20px;
     font-size: 1.5em;
-    border-bottom: 2px solid #667eea;
+    border-bottom: 2px solid #439789;
     padding-bottom: 10px;
 }
 
@@ -105,18 +115,21 @@ h1 {
 }
 
 .label {
-    font-weight: 600;
-    color: #555;
+    font-family: 'Concert One', sans-serif;
+    font-weight: 1.2rem;
+    color: #2c4b3f;
 }
 
 .value {
+    font-family: 'Concert One', sans-serif;
     font-size: 1.2em;
     font-weight: bold;
-    color: #667eea;
+    color: #29795d;
 }
 
 /* Alert Status */
 .alert-status {
+    font-family: 'Concert One', sans-serif;
     background: white;
     border-radius: 15px;
     padding: 20px;
