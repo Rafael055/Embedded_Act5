@@ -21,6 +21,10 @@ VREF = 3.3
 DEFAULT_SAMPLES = 6
 SAMPLE_DELAY = 0.008  # seconds between raw reads
 
+# Calibration: baseline (silence) value to subtract from raw readings
+# This allows readings to go down to 0% when silent
+SILENCE_BASELINE = 128  # Adjust this based on your sensor's idle reading
+
 _bus = None
 
 
@@ -116,7 +120,10 @@ def read_sound(samples=DEFAULT_SAMPLES):
         else:
             # PCF8591 output is 0..255
             voltage = (raw / 255.0) * VREF
-            percent = (raw / 255.0) * 100.0
+            # Subtract baseline for calibrated reading (0 = silence, 255 = max noise)
+            calibrated_raw = max(0, raw - SILENCE_BASELINE)
+            percent = (calibrated_raw / (255.0 - SILENCE_BASELINE)) * 100.0
+            percent = min(100.0, max(0, percent))  # Clamp to 0-100%
 
         # combine signals: prefer digital, but use analog if digital is ambiguous
         detected = sound_digital

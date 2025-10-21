@@ -255,13 +255,15 @@ async function refreshSoundHistoryChart() {
 // -------------------------
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Initial fetch
+  // Initial fetch - all at once
   fetchSensorData();
   refreshRaindropChart();
   refreshSoundHistoryChart();
 
-  // Auto-refresh timers
-  setInterval(fetchSensorData, 2000);
-  setInterval(refreshRaindropChart, 5000);
-  setInterval(refreshSoundHistoryChart, 5000);
+  // Auto-refresh timers - synchronized
+  setInterval(() => {
+    fetchSensorData();
+    refreshRaindropChart();
+    refreshSoundHistoryChart();
+  }, 5000); // All fetch at same 5-second interval
 });
