@@ -1,4 +1,7 @@
-// Fetch sensor data from API
+// -------------------------
+// Fetch and update sensors
+// -------------------------
+
 async function fetchSensorData() {
   try {
     const response = await fetch('/api/sensors');
@@ -17,88 +20,98 @@ async function fetchSensorData() {
   }
 }
 
-// Update DHT sensor display
+// -------------------------
+// DHT sensor display
+// -------------------------
+
 function updateDHTDisplay(dht) {
   const tempElement = document.getElementById('temperature');
   const humidityElement = document.getElementById('humidity');
 
-  if (dht.temperature !== null && dht.humidity !== null) {
-    tempElement.textContent = `${dht.temperature}°C`;
-    humidityElement.textContent = `${dht.humidity}%`;
-
-    if (dht.cached) {
-      tempElement.style.opacity = '0.7';
-      humidityElement.style.opacity = '0.7';
-    } else {
-      tempElement.style.opacity = '1';
-      humidityElement.style.opacity = '1';
-    }
-  } else {
+  if (!dht || dht.temperature == null || dht.humidity == null) {
     tempElement.textContent = 'Loading...';
     humidityElement.textContent = 'Loading...';
+    return;
   }
+
+  tempElement.textContent = `${dht.temperature}°C`;
+  humidityElement.textContent = `${dht.humidity}%`;
+
+  const opacity = dht.cached ? '0.7' : '1';
+  tempElement.style.opacity = opacity;
+  humidityElement.style.opacity = opacity;
 }
 
-// Update rain sensor display
+// -------------------------
+// Rain sensor display
+// -------------------------
+
 function updateRainDisplay(rain) {
   const statusElement = document.getElementById('rain-status');
 
-  if (rain.rain_detected !== null) {
-    statusElement.textContent = rain.status;
-
-    if (rain.rain_detected) {
-      statusElement.style.color = '#3498db';
-      statusElement.style.fontWeight = 'bold';
-    } else {
-      statusElement.style.color = '#2ecc71';
-      statusElement.style.fontWeight = 'normal';
-    }
-  } else {
+  if (!rain || rain.rain_detected == null) {
     statusElement.textContent = 'Loading...';
+    return;
+  }
+
+  statusElement.textContent = rain.status;
+
+  if (rain.rain_detected) {
+    statusElement.style.color = '#3498db';
+    statusElement.style.fontWeight = 'bold';
+  } else {
+    statusElement.style.color = '#2ecc71';
+    statusElement.style.fontWeight = 'normal';
   }
 }
 
-// Update sound sensor display
+// -------------------------
+// Sound sensor display
+// -------------------------
+
 function updateSoundDisplay(sound) {
   const statusElement = document.getElementById('sound-status');
 
-  if (sound.sound_detected !== null) {
-    statusElement.textContent = sound.status;
-
-    if (sound.sound_detected) {
-      statusElement.style.color = '#e74c3c';
-      statusElement.style.fontWeight = 'bold';
-    } else {
-      statusElement.style.color = '#95a5a6';
-      statusElement.style.fontWeight = 'normal';
-    }
-  } else {
+  if (!sound || sound.sound_detected == null) {
     statusElement.textContent = 'Loading...';
+    return;
+  }
+
+  statusElement.textContent = sound.status;
+
+  if (sound.sound_detected) {
+    statusElement.style.color = '#e74c3c';
+    statusElement.style.fontWeight = 'bold';
+  } else {
+    statusElement.style.color = '#95a5a6';
+    statusElement.style.fontWeight = 'normal';
   }
 }
 
-// Update alert display (buzzer and warning overlay)
+// -------------------------
+// Alert display (buzzer/warning)
+// -------------------------
+
 function updateAlertDisplay(alert) {
   const warningOverlay = document.getElementById('warning-overlay');
-
-  if (alert.alert_active) {
-    // Show warning overlay
-    warningOverlay.classList.remove('hidden');
-  } else {
-    // Hide warning overlay
-    warningOverlay.classList.add('hidden');
-  }
+  if (!alert) return;
+  warningOverlay.classList.toggle('hidden', !alert.alert_active);
 }
 
-// Auto-refresh every 2 seconds
-setInterval(fetchSensorData, 2000);
+// -------------------------
+// Chart helpers
+// -------------------------
 
-// Initial fetch when page loads
-document.addEventListener('DOMContentLoaded', fetchSensorData);
+function formatTimeLabel(isoTs) {
+  const d = new Date(isoTs);
+  if (isNaN(d)) return isoTs;
+  return d.toLocaleTimeString();
+}
 
 // -------------------------
 // Raindrop history chart
 // -------------------------
+
 let raindropChart = null;
 
 async function fetchRaindrops(n = 10) {
@@ -109,28 +122,16 @@ async function fetchRaindrops(n = 10) {
   return json.rows || [];
 }
 
-function formatTimeLabel(isoTs) {
-  const d = new Date(isoTs);
-  if (isNaN(d)) return isoTs;
-  return d.toLocaleTimeString();
-}
-
 function buildRaindropChart(labels, values) {
   const ctx = document.getElementById('raindropChart').getContext('2d');
-
-  if (raindropChart) {
-    raindropChart.data.labels = labels;
-    raindropChart.data.datasets[0].data = values;
-    raindropChart.update();
-    return;
-  }
+  if (raindropChart) raindropChart.destroy();
 
   raindropChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: labels,
       datasets: [{
-        label: 'Raindrop value',
+        label: 'Raindrop Value',
         data: values,
         borderColor: 'rgba(52, 194, 71, 1)',
         backgroundColor: 'rgba(54, 235, 190, 0.12)',
@@ -160,9 +161,7 @@ function buildRaindropChart(labels, values) {
           display: true,
           beginAtZero: true,
           title: { display: true, text: 'Rain Status' },
-          ticks: {
-            stepSize: 1
-          }
+          ticks: { stepSize: 1 }
         }
       }
     }
@@ -183,6 +182,7 @@ async function refreshRaindropChart() {
 // -------------------------
 // Sound history chart
 // -------------------------
+
 let soundHistoryChart = null;
 
 async function fetchSounds(n = 10) {
@@ -195,20 +195,14 @@ async function fetchSounds(n = 10) {
 
 function buildSoundHistoryChart(labels, values) {
   const ctx = document.getElementById('soundHistoryChart').getContext('2d');
-
-  if (soundHistoryChart) {
-    soundHistoryChart.data.labels = labels;
-    soundHistoryChart.data.datasets[0].data = values;
-    soundHistoryChart.update();
-    return;
-  }
+  if (soundHistoryChart) soundHistoryChart.destroy();
 
   soundHistoryChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: labels,
       datasets: [{
-        label: 'Sound intensity (%)',
+        label: 'Sound Intensity (%)',
         data: values,
         borderColor: 'rgba(16, 73, 66, 1)',
         backgroundColor: 'rgba(60, 231, 203, 0.12)',
@@ -256,10 +250,18 @@ async function refreshSoundHistoryChart() {
   }
 }
 
-// Initialize charts and set up refresh intervals
+// -------------------------
+// Initialize on page load
+// -------------------------
+
 document.addEventListener('DOMContentLoaded', () => {
+  // Initial fetch
+  fetchSensorData();
   refreshRaindropChart();
   refreshSoundHistoryChart();
+
+  // Auto-refresh timers
+  setInterval(fetchSensorData, 2000);
   setInterval(refreshRaindropChart, 5000);
   setInterval(refreshSoundHistoryChart, 5000);
 });

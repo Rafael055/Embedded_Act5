@@ -5,7 +5,7 @@
 }
 
 body {
-    background-image: url('img1/greenbg.jpg');
+    background-image: url('../img/greenbg.jpg');
     background-size: cover;        
     background-position: center;    
     background-repeat: no-repeat;   
